@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/notification-bell";
 
 const navItems = [
   { href: "/admin/dashboard", label: "แดชบอร์ด" },
@@ -42,7 +43,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ))}
         </nav>
         <div className="border-t pt-4 mt-4">
-          <p className="text-sm font-medium truncate">{user?.name}</p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium truncate">{user?.name}</p>
+            <NotificationBell basePath="/admin" />
+          </div>
           <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
           <Button variant="ghost" size="sm" className="mt-2 w-full" onClick={() => logout()}>
             ออกจากระบบ

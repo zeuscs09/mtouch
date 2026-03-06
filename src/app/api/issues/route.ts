@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireRole } from "@/lib/api-auth";
 import { z } from "zod/v4";
+import { notifyNewIssue } from "@/lib/notifications";
 
 const createSchema = z.object({
   title: z.string().min(1).max(200),
@@ -126,6 +127,9 @@ export async function POST(request: NextRequest) {
       changedById: auth.userId,
     },
   });
+
+  // Notify assigned team
+  notifyNewIssue(issue.id, mapping?.teamId ?? null, title, issue.company?.name ?? "").catch(() => {});
 
   return Response.json({ issue }, { status: 201 });
 }

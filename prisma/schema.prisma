@@ -71,6 +71,7 @@ model User {
   teamMembers    TeamMember[]
   comments       IssueComment[]
   statusChanges  IssueStatusLog[]
+  notifications  Notification[]
 
   @@map("users")
 }
@@ -122,13 +123,14 @@ model Issue {
   createdAt           DateTime      @default(now()) @map("created_at")
   updatedAt           DateTime      @updatedAt @map("updated_at")
 
-  company     Company           @relation(fields: [companyId], references: [id])
-  reporter    User              @relation("reporter", fields: [reporterId], references: [id])
-  assignee    User?             @relation("assignee", fields: [assigneeId], references: [id])
-  team        Team?             @relation(fields: [teamId], references: [id])
-  comments    IssueComment[]
-  attachments IssueAttachment[]
-  statusLogs  IssueStatusLog[]
+  company       Company           @relation(fields: [companyId], references: [id])
+  reporter      User              @relation("reporter", fields: [reporterId], references: [id])
+  assignee      User?             @relation("assignee", fields: [assigneeId], references: [id])
+  team          Team?             @relation(fields: [teamId], references: [id])
+  comments      IssueComment[]
+  attachments   IssueAttachment[]
+  statusLogs    IssueStatusLog[]
+  notifications Notification[]
 
   @@map("issues")
 }
@@ -183,6 +185,30 @@ model SlaPolicy {
   updatedAt        DateTime      @updatedAt @map("updated_at")
 
   @@map("sla_policies")
+}
+
+enum NotificationType {
+  issue_created
+  issue_assigned
+  status_changed
+  new_comment
+  sla_breach
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  type      NotificationType
+  title     String
+  message   String
+  issueId   String?          @map("issue_id")
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issue Issue? @relation(fields: [issueId], references: [id], onDelete: SetNull)
+
+  @@map("notifications")
 }
 
 model TeamIssueTypeMapping {

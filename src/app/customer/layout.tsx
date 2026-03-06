@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/notification-bell";
 
 const navItems = [
   { href: "/customer", label: "แจ้งปัญหา" },
@@ -39,6 +40,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
             </nav>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationBell basePath="/customer" />
             <span className="text-sm text-muted-foreground">{user?.name}</span>
             <Button variant="ghost" size="sm" onClick={() => logout()}>
               ออกจากระบบ

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api-auth";
 import { z } from "zod/v4";
+import { notifyAssignment } from "@/lib/notifications";
 
 const updateSchema = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -84,6 +85,11 @@ export async function PUT(
       team: { select: { id: true, name: true } },
     },
   });
+
+  // Notify assignee if changed
+  if (parsed.data.assigneeId && parsed.data.assigneeId !== existing.assigneeId) {
+    notifyAssignment(id, parsed.data.assigneeId, issue.title).catch(() => {});
+  }
 
   return Response.json({ issue });
 }

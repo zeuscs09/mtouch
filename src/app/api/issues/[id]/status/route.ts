@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api-auth";
 import { z } from "zod/v4";
+import { notifyStatusChange, notifySlaBreached } from "@/lib/notifications";
 
 const statusSchema = z.object({
   status: z.enum(["open", "in_progress", "waiting_customer", "resolved", "closed"]),
@@ -97,6 +98,17 @@ export async function PUT(
       },
     }),
   ]);
+
+  // Notify customer about status change
+  notifyStatusChange(id, issue.reporterId, issue.title, newStatus).catch(() => {});
+
+  // Notify about SLA breach if applicable
+  if (updateData.slaResponseBreached) {
+    notifySlaBreached(id, issue.teamId, issue.title, "Response Time").catch(() => {});
+  }
+  if (updateData.slaResolveBreached) {
+    notifySlaBreached(id, issue.teamId, issue.title, "Resolve Time").catch(() => {});
+  }
 
   return Response.json({ issue: updatedIssue });
 }

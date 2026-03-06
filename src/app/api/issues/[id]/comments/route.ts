@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api-auth";
 import { z } from "zod/v4";
+import { notifyNewComment } from "@/lib/notifications";
 
 const commentSchema = z.object({
   content: z.string().min(1).max(5000),
@@ -80,6 +81,9 @@ export async function POST(
       },
     });
   }
+
+  // Notify issue participants
+  notifyNewComment(id, auth.userId, issue.id, comment.user.name).catch(() => {});
 
   return Response.json({ comment }, { status: 201 });
 }
