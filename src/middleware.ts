@@ -8,7 +8,7 @@ const JWT_SECRET = new TextEncoder().encode(
 const publicPaths = ["/login", "/register", "/api/auth/login", "/api/auth/register"];
 
 const adminPaths = ["/admin"];
-const customerPaths = ["/issues"];
+const customerPaths = ["/customer"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
     // Admin routes: only admin, leader, support
     if (adminPaths.some((p) => pathname.startsWith(p))) {
       if (!["admin", "leader", "support"].includes(role)) {
-        return NextResponse.redirect(new URL("/issues", request.url));
+        return NextResponse.redirect(new URL("/customer", request.url));
       }
     }
 
@@ -49,7 +49,7 @@ export async function middleware(request: NextRequest) {
     // Redirect root to appropriate dashboard
     if (pathname === "/") {
       if (role === "customer") {
-        return NextResponse.redirect(new URL("/issues", request.url));
+        return NextResponse.redirect(new URL("/customer", request.url));
       }
       return NextResponse.redirect(new URL("/admin/dashboard", request.url));
     }

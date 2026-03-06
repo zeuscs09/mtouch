@@ -50,7 +50,7 @@ export function useAuth() {
     onSuccess: (data) => {
       queryClient.setQueryData(["auth", "me"], data.user);
       if (data.user.role === "customer") {
-        router.push("/issues");
+        router.push("/customer");
       } else {
         router.push("/admin/dashboard");
       }
@@ -77,7 +77,7 @@ export function useAuth() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["auth", "me"], data.user);
-      router.push("/issues");
+      router.push("/customer");
     },
   });
 
