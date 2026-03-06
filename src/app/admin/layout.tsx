@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/admin/dashboard", label: "แดชบอร์ด" },
+  { href: "/admin/issues", label: "Issues" },
+  { href: "/admin/sla", label: "SLA" },
   { href: "/admin/companies", label: "บริษัท" },
   { href: "/admin/users", label: "ผู้ใช้" },
   { href: "/admin/teams", label: "ทีม" },
