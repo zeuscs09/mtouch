@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  customer
+  support
+  leader
+  admin
+}
+
+enum IssueType {
+  bug
+  feature_request
+  question
+  complaint
+  other
+}
+
+enum IssuePriority {
+  low
+  medium
+  high
+  critical
+}
+
+enum IssueStatus {
+  open
+  in_progress
+  waiting_customer
+  resolved
+  closed
+}
+
+enum TeamMemberRole {
+  leader
+  member
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users  User[]
+  issues Issue[]
+
+  @@map("companies")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  companyId    String   @map("company_id")
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(customer)
+  lineUserId   String?  @unique @map("line_user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  company        Company          @relation(fields: [companyId], references: [id])
+  reportedIssues Issue[]          @relation("reporter")
+  assignedIssues Issue[]          @relation("assignee")
+  teamMembers    TeamMember[]
+  comments       IssueComment[]
+  statusChanges  IssueStatusLog[]
+
+  @@map("users")
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  members           TeamMember[]
+  issues            Issue[]
+  issueTypeMappings TeamIssueTypeMapping[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id     String         @id @default(uuid())
+  teamId String         @map("team_id")
+  userId String         @map("user_id")
+  role   TeamMemberRole @default(member)
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model Issue {
+  id                  String        @id @default(uuid())
+  title               String
+  description         String
+  type                IssueType
+  priority            IssuePriority
+  status              IssueStatus   @default(open)
+  projectName         String?       @map("project_name")
+  companyId           String        @map("company_id")
+  reporterId          String        @map("reporter_id")
+  assigneeId          String?       @map("assignee_id")
+  teamId              String?       @map("team_id")
+  firstRespondedAt    DateTime?     @map("first_responded_at")
+  resolvedAt          DateTime?     @map("resolved_at")
+  slaResponseDeadline DateTime?     @map("sla_response_deadline")
+  slaResolveDeadline  DateTime?     @map("sla_resolve_deadline")
+  slaResponseBreached Boolean       @default(false) @map("sla_response_breached")
+  slaResolveBreached  Boolean       @default(false) @map("sla_resolve_breached")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+
+  company     Company           @relation(fields: [companyId], references: [id])
+  reporter    User              @relation("reporter", fields: [reporterId], references: [id])
+  assignee    User?             @relation("assignee", fields: [assigneeId], references: [id])
+  team        Team?             @relation(fields: [teamId], references: [id])
+  comments    IssueComment[]
+  attachments IssueAttachment[]
+  statusLogs  IssueStatusLog[]
+
+  @@map("issues")
+}
+
+model IssueComment {
+  id        String   @id @default(uuid())
+  issueId   String   @map("issue_id")
+  userId    String   @map("user_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@map("issue_comments")
+}
+
+model IssueAttachment {
+  id        String   @id @default(uuid())
+  issueId   String   @map("issue_id")
+  fileUrl   String   @map("file_url")
+  fileName  String   @map("file_name")
+  fileType  String   @map("file_type")
+  fileSize  Int      @map("file_size")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@map("issue_attachments")
+}
+
+model IssueStatusLog {
+  id          String       @id @default(uuid())
+  issueId     String       @map("issue_id")
+  fromStatus  IssueStatus? @map("from_status")
+  toStatus    IssueStatus  @map("to_status")
+  changedById String       @map("changed_by_id")
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  issue     Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  changedBy User  @relation(fields: [changedById], references: [id])
+
+  @@map("issue_status_logs")
+}
+
+model SlaPolicy {
+  id               String        @id @default(uuid())
+  priority         IssuePriority @unique
+  responseTimeMins Int           @map("response_time_mins")
+  resolveTimeMins  Int           @map("resolve_time_mins")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  @@map("sla_policies")
+}
+
+model TeamIssueTypeMapping {
+  id        String    @id @default(uuid())
+  issueType IssueType @unique @map("issue_type")
+  teamId    String    @map("team_id")
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@map("team_issue_type_mappings")
+}
