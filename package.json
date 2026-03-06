@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "lsof -ti:2028 | xargs kill -9 2>/dev/null; next dev -p 2028 -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
